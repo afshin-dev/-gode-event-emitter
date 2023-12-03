@@ -51,6 +51,13 @@ func (ee *EventEmitter) AddEventListener(eventName string, listenerFunc Listener
 	ee.master[eventName][listenerId] = listener
 	return
 }
+func (ee *EventEmitter) RemoveEventListener(eventName string, listenerId string) {
+	if _, ok := ee.master[eventName]; !ok {
+		return
+	}
+
+	delete(ee.master[eventName], listenerId)
+}
 
 func (ee *EventEmitter) checkMaxListeners(eventName string) {
 	if len(ee.master[eventName]) >= ee.maxListeners {
