@@ -20,11 +20,21 @@ type EventEmitter struct {
 
 // New return a new instance of EventEmitter
 func New() EventEmitter {
-	return EventEmitter{
-		master:             make(map[string]map[string]Listener),
-		maxListeners:       maxListeners,
-		internalEventNames: []string{"newListener"},
+	eventEmitter := EventEmitter{
+		master:       make(map[string]map[string]Listener),
+		maxListeners: maxListeners,
+		// TODO: implement these internal event into right place
+		internalEventNames: []string{"newListener", "removeListener"},
 	}
+
+	// register default and internal events that EventEmitter at some point emit
+	// for example whenever any new event listener added to master
+	// EventEmitter emit a `newListener` for everyone listen to it
+	for _, internalEvent := range eventEmitter.internalEventNames {
+		eventEmitter.master[internalEvent] = make(map[string]Listener)
+	}
+
+	return eventEmitter
 }
 
 // AddEventListener add a listener to underlying master events object
@@ -57,6 +67,12 @@ func (ee *EventEmitter) RemoveEventListener(eventName string, listenerId string)
 	}
 
 	delete(ee.master[eventName], listenerId)
+}
+
+func (ee *EventEmitter) Emit(eventName string, args ...interface{}) {
+	for _, l := range ee.master[eventName] {
+		go l.fn(args)
+	}
 }
 
 func (ee *EventEmitter) checkMaxListeners(eventName string) {
