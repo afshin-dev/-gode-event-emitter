@@ -50,6 +50,11 @@ func (ee *EventEmitter) Listeners(eventName string) []ListenerFunc {
 	return listenerFuncs
 }
 
+// RemoveAllListeners remove all listeners for specific eventName
+func (ee *EventEmitter) RemoveAllListeners(eventName string) {
+	delete(ee.master, eventName)
+}
+
 // ListenerCount return len of listeners map for provided eventName
 func (ee *EventEmitter) ListenerCount(eventName string) int {
 	listeners, ok := ee.master[eventName]
@@ -129,7 +134,7 @@ func (ee *EventEmitter) Emit(eventName string, args ...interface{}) {
 
 		// delete once listener
 		if l.once {
-			delete(ee.master[eventName], id)
+			ee.RemoveEventListener(eventName, id)
 		}
 	}
 }
