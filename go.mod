@@ -1,4 +1,4 @@
-module gode-event-emitter
+module github.com/afshin-dev/gode-event-emitter
 
 go 1.20
 
