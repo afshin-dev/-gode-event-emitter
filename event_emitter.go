@@ -37,6 +37,29 @@ func New() EventEmitter {
 	return eventEmitter
 }
 
+// Listeners return a slice of ListenerFunc and if this listeners call
+// manually by consumers, by definition or ideally must not cause any side effect in
+// internal of EventEmitter
+func (ee *EventEmitter) Listeners(eventName string) []ListenerFunc {
+	var listenerFuncs []ListenerFunc
+
+	for _, listener := range ee.master[eventName] {
+		listenerFuncs = append(listenerFuncs, listener.fn)
+	}
+
+	return listenerFuncs
+}
+
+// ListenerCount return len of listeners map for provided eventName
+func (ee *EventEmitter) ListenerCount(eventName string) int {
+	listeners, ok := ee.master[eventName]
+
+	if !ok {
+		return 0
+	}
+	return len(listeners)
+}
+
 // EventNames return any event name that EventEmitter has registered listener for it
 func (ee *EventEmitter) EventNames() []string {
 	var events []string
@@ -72,14 +95,23 @@ func (ee *EventEmitter) AddEventListener(eventName string, listenerFunc Listener
 	ee.master[eventName][listenerId] = listener
 	return
 }
+
 func (ee *EventEmitter) RemoveEventListener(eventName string, listenerId string) {
 	if _, ok := ee.master[eventName]; !ok {
 		return
 	}
 
 	delete(ee.master[eventName], listenerId)
+
+	// Revision: if not deleting a empty listener map cause any performance or memory
+	// problem `here` after deleting event listener must delete empty map
 }
 
+// Emit call all listener as a goroutine for provided event name
+// all listener must be pure and not create side effect
+// listener better to not panic
+// and when accessing global state you should access synchronously
+// with some thing like lock
 func (ee *EventEmitter) Emit(eventName string, args ...interface{}) {
 	for _, l := range ee.master[eventName] {
 		go l.fn(args)
