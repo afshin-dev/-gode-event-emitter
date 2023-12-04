@@ -8,9 +8,9 @@ import (
 
 func TestEventEmitter_AddEventListener_Must_Return_A_ListenerId(t *testing.T) {
 	ee := New()
-	listenerId := ee.AddEventListener("some_event", ListenerFunc(func(args ...interface{}) {
+	listenerId := ee.AddEventListener("some_event", func(args ...interface{}) {
 
-	}))
+	})
 
 	if _, err := uuid.Parse(listenerId); err != nil {
 		t.Error("listener must be return a valid string uuid")

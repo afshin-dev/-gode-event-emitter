@@ -72,16 +72,27 @@ func (ee *EventEmitter) EventNames() []string {
 }
 
 // AddEventListener add a listener to underlying master events object
-func (ee *EventEmitter) AddEventListener(eventName string, listenerFunc ListenerFunc) (listenerId string) {
+func (ee *EventEmitter) AddEventListener(eventName string, listenerFunc ListenerFunc) string {
+	return ee.addEventListener(eventName, listenerFunc, false)
+}
+
+// Once add a listener to underlying master events object for provided eventName
+// - listener called once and then removed
+func (ee *EventEmitter) Once(eventName string, listenerFunc ListenerFunc) string {
+	return ee.addEventListener(eventName, listenerFunc, true)
+}
+
+// addEventListener add a listener to underlying master events object
+func (ee *EventEmitter) addEventListener(eventName string, listenerFunc ListenerFunc, once bool) (listenerId string) {
 	listenerId = uuid.NewString()
 
 	listener := Listener{
 		fn:   listenerFunc,
-		once: false,
+		once: once,
 		id:   listenerId,
 	}
 
-	// if is the first time that a event going to create
+	// if is the first time that an event going to create
 	if _, ok := ee.master[eventName]; !ok {
 		ee.master[eventName] = make(map[string]Listener)
 		ee.master[eventName][listenerId] = listener
@@ -111,10 +122,15 @@ func (ee *EventEmitter) RemoveEventListener(eventName string, listenerId string)
 // all listener must be pure and not create side effect
 // listener better to not panic
 // and when accessing global state you should access synchronously
-// with some thing like lock
+// with something like lock
 func (ee *EventEmitter) Emit(eventName string, args ...interface{}) {
-	for _, l := range ee.master[eventName] {
+	for id, l := range ee.master[eventName] {
 		go l.fn(args)
+
+		// delete once listener
+		if l.once {
+			delete(ee.master[eventName], id)
+		}
 	}
 }
 
