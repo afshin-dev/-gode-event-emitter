@@ -34,3 +34,21 @@ func TestEventEmitter_SetMaxListeners_Must_Change_At_Phase_Of_Initial(t *testing
 		t.Error(fmt.Printf("newMaxListeners must be %d", newMaxListeners))
 	}
 }
+
+func TestEventEmitter_EventNames_Registered_Event_Must_Included_In_Returns_Slice(t *testing.T) {
+	ee := New()
+	exampleEventName := "a"
+	ee.AddEventListener(exampleEventName, ListenerFunc(func(args ...interface{}) {
+
+	}))
+
+	names := ee.EventNames()
+
+	for _, e := range names {
+		if e == exampleEventName {
+			return
+		}
+	}
+
+	t.Error(fmt.Sprintf("%s must be in event  names slice", exampleEventName))
+}

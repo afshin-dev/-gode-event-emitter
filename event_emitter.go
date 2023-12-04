@@ -37,6 +37,17 @@ func New() EventEmitter {
 	return eventEmitter
 }
 
+// EventNames return any event name that EventEmitter has registered listener for it
+func (ee *EventEmitter) EventNames() []string {
+	var events []string
+	for event, listenerMap := range ee.master {
+		if len(listenerMap) > 0 {
+			events = append(events, event)
+		}
+	}
+	return events
+}
+
 // AddEventListener add a listener to underlying master events object
 func (ee *EventEmitter) AddEventListener(eventName string, listenerFunc ListenerFunc) (listenerId string) {
 	listenerId = uuid.NewString()
